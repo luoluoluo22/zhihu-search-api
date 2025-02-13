@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: zhihu-search-api
+    env: python
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ZHIHU_COOKIE
+        sync: false
+    # 增加构建时的资源限制
+    buildConfig:
+      maxRetries: 3
+      memory: 1024
+    # 运行时的资源配置
+    plan: starter
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+      targetMemoryPercent: 80
+    healthCheckPath: /
+    autoDeploy: true 

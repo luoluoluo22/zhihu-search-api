@@ -1,21 +1,47 @@
-# Ignore environment files
-.env
-
-# Ignore Python compiled files
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Ignore cookies
+# 虚拟环境
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 项目特定
+.env
+user_data/
+.pyppeteer/
 cookies.txt
+
+# 系统文件
+.DS_Store
+Thumbs.db
 
 # Ignore node modules
 node_modules/
 
 # Ignore netlify
 .netlify/
-
-# Ignore dist
-dist/
-
-# Ignore user data
-user_data/
