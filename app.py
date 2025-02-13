@@ -7,12 +7,17 @@ from pyppeteer import launch
 from dotenv import load_dotenv
 import sys
 import platform
-import glob
+import signal
+import atexit
 
 # 加载环境变量
 load_dotenv()
 
 app = FastAPI()
+
+# 存储全局的浏览器实例和事件循环
+browser_instances = set()
+loop = None
 
 # 配置CORS
 app.add_middleware(
@@ -22,6 +27,33 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+async def cleanup_browser(browser):
+    """安全地清理浏览器实例"""
+    if browser:
+        try:
+            browser_instances.discard(browser)
+            if not browser.process.returncode:
+                await browser.close()
+        except Exception as e:
+            print(f"关闭浏览器时出错: {e}")
+
+async def cleanup_all_browsers():
+    """清理所有浏览器实例"""
+    tasks = [cleanup_browser(browser) for browser in browser_instances.copy()]
+    if tasks:
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+@app.on_event("startup")
+async def startup_event():
+    """服务启动时的初始化"""
+    global loop
+    loop = asyncio.get_running_loop()
+    
+@app.on_event("shutdown")
+async def shutdown_event():
+    """服务关闭时的清理"""
+    await cleanup_all_browsers()
 
 async def search_zhihu(query: str):
     browser = None
@@ -91,6 +123,7 @@ async def search_zhihu(query: str):
 
         # 启动浏览器
         browser = await launch(**launch_options)
+        browser_instances.add(browser)
         
         page = await browser.newPage()
         
@@ -165,10 +198,7 @@ async def search_zhihu(query: str):
 
     finally:
         if browser:
-            try:
-                await browser.close()
-            except:
-                pass
+            await cleanup_browser(browser)
 
 @app.get("/")
 async def root():
