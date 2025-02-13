@@ -51,15 +51,19 @@ async def search_zhihu(query: str):
             'handleSIGHUP': False
         }
 
-        # 如果在本地Windows环境且存在Chrome，使用本地Chrome
-        chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-        if platform.system() == 'Windows' and os.path.exists(chrome_path):
-            launch_options['executablePath'] = chrome_path
-        # 在Render或其他环境中使用Puppeteer内置的Chrome
+        # 获取Chromium路径
+        chromium_path = os.getenv('CHROMIUM_PATH')
+        if chromium_path and os.path.exists(chromium_path):
+            print(f"使用预下载的Chromium: {chromium_path}")
+            launch_options['executablePath'] = chromium_path
         else:
-            from pyppeteer.chromium_downloader import download_chromium
-            # 确保Chromium已下载
-            download_chromium()
+            # 如果在本地Windows环境且存在Chrome，使用本地Chrome
+            chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+            if platform.system() == 'Windows' and os.path.exists(chrome_path):
+                print(f"使用本地Chrome: {chrome_path}")
+                launch_options['executablePath'] = chrome_path
+            else:
+                print("使用自动下载的Chromium")
 
         # 启动浏览器
         browser = await launch(**launch_options)
