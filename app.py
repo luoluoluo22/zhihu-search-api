@@ -53,17 +53,14 @@ async def search_zhihu(query: str):
 
         # 获取Chromium路径
         chromium_path = os.getenv('CHROMIUM_PATH')
-        if chromium_path and os.path.exists(chromium_path):
-            print(f"使用预下载的Chromium: {chromium_path}")
-            launch_options['executablePath'] = chromium_path
-        else:
-            # 如果在本地Windows环境且存在Chrome，使用本地Chrome
-            chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-            if platform.system() == 'Windows' and os.path.exists(chrome_path):
-                print(f"使用本地Chrome: {chrome_path}")
-                launch_options['executablePath'] = chrome_path
-            else:
-                print("使用自动下载的Chromium")
+        if not chromium_path:
+            raise Exception("未找到Chromium路径环境变量")
+        
+        if not os.path.exists(chromium_path):
+            raise Exception(f"Chromium可执行文件不存在: {chromium_path}")
+
+        print(f"使用Chromium路径: {chromium_path}")
+        launch_options['executablePath'] = chromium_path
 
         # 启动浏览器
         browser = await launch(**launch_options)
