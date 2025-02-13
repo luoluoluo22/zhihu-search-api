@@ -64,51 +64,70 @@ async def search_zhihu(query: str):
         base_dir = "/opt/render/.local/share/pyppeteer/local-chromium/588429"
         print(f"\n检查基础目录是否存在: {os.path.exists(base_dir)}")
         
-        if os.path.exists(base_dir):
-            print("\n基础目录内容:")
-            try:
-                for item in os.listdir(base_dir):
-                    item_path = os.path.join(base_dir, item)
-                    print(f"- {item} ({'目录' if os.path.isdir(item_path) else '文件'})")
-            except Exception as e:
-                print(f"列出目录内容失败: {e}")
+        # 检查pyppeteer的home目录
+        pyppeteer_home = os.getenv('PYPPETEER_HOME', '/opt/render/.local/share/pyppeteer')
+        print(f"\nPYPPETEER_HOME: {pyppeteer_home}")
+        if os.path.exists(pyppeteer_home):
+            print("PYPPETEER_HOME目录内容:")
+            for root, dirs, files in os.walk(pyppeteer_home):
+                print(f"\n当前目录: {root}")
+                if dirs:
+                    print("子目录:", dirs)
+                if files:
+                    print("文件:", files)
 
-            chrome_linux_dir = os.path.join(base_dir, "chrome-linux")
-            if os.path.exists(chrome_linux_dir):
-                print("\nchrome-linux目录内容:")
+        # 尝试不同的可能路径
+        possible_paths = [
+            chromium_path,  # 环境变量中的路径
+            "/opt/render/.local/share/pyppeteer/local-chromium/588429/chrome-linux/chrome",  # 预期路径
+            os.path.join(os.getcwd(), ".local-chromium/chrome-linux/chrome"),  # 相对于当前目录
+            os.path.join(pyppeteer_home, "local-chromium/588429/chrome-linux/chrome")  # 相对于PYPPETEER_HOME
+        ]
+
+        chrome_found = False
+        for path in possible_paths:
+            print(f"\n检查路径: {path}")
+            if os.path.exists(path):
+                print(f"找到Chrome: {path}")
                 try:
-                    for item in os.listdir(chrome_linux_dir):
-                        item_path = os.path.join(chrome_linux_dir, item)
-                        print(f"- {item} ({'目录' if os.path.isdir(item_path) else '文件'})")
-                        if item == "chrome":
-                            print(f"chrome文件权限: {oct(os.stat(item_path).st_mode)[-3:]}")
+                    os.chmod(path, 0o755)
+                    print("已设置执行权限")
+                    chromium_path = path
+                    chrome_found = True
+                    break
                 except Exception as e:
-                    print(f"列出chrome-linux目录内容失败: {e}")
-
-        # 检查文件权限
-        if os.path.exists(chromium_path):
-            print(f"\nChromium文件权限: {oct(os.stat(chromium_path).st_mode)[-3:]}")
-            # 尝试修复权限
-            try:
-                os.chmod(chromium_path, 0o755)
-                print("已设置执行权限")
-            except Exception as e:
-                print(f"设置权限失败: {e}")
-        else:
-            print(f"\nChromium文件不存在: {chromium_path}")
-            # 搜索可能的位置
-            possible_locations = glob.glob("/opt/render/.local/share/pyppeteer/local-chromium/**/chrome", recursive=True)
-            if possible_locations:
-                print("\n找到以下可能的Chrome位置:")
-                for loc in possible_locations:
-                    print(f"- {loc}")
-                chromium_path = possible_locations[0]
-                print(f"\n使用第一个找到的位置: {chromium_path}")
+                    print(f"设置权限失败: {e}")
             else:
-                raise Exception("未找到任何Chrome可执行文件")
+                print("路径不存在")
+
+        if not chrome_found:
+            # 搜索整个目录树
+            print("\n开始全局搜索chrome可执行文件...")
+            search_paths = [
+                "/opt/render/.local/share/pyppeteer",
+                "/opt/render/.local/share",
+                os.getcwd()
+            ]
+            for search_path in search_paths:
+                if os.path.exists(search_path):
+                    for root, dirs, files in os.walk(search_path):
+                        if 'chrome' in files:
+                            found_path = os.path.join(root, 'chrome')
+                            print(f"找到可能的Chrome: {found_path}")
+                            chromium_path = found_path
+                            chrome_found = True
+                            try:
+                                os.chmod(found_path, 0o755)
+                                print("已设置执行权限")
+                                break
+                            except Exception as e:
+                                print(f"设置权限失败: {e}")
+
+        if not chrome_found:
+            raise Exception("未找到可用的Chrome可执行文件")
 
         print(f"\n最终使用的Chromium路径: {chromium_path}")
-        # launch_options['executablePath'] = chromium_path
+        launch_options['executablePath'] = chromium_path
 
         # 启动浏览器
         browser = await launch(**launch_options)
