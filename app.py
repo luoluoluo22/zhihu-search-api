@@ -108,7 +108,7 @@ async def search_zhihu(query: str):
                 raise Exception("未找到任何Chrome可执行文件")
 
         print(f"\n最终使用的Chromium路径: {chromium_path}")
-        launch_options['executablePath'] = chromium_path
+        # launch_options['executablePath'] = chromium_path
 
         # 启动浏览器
         browser = await launch(**launch_options)
