@@ -3,14 +3,12 @@ services:
     name: zhihu-search-api
     env: python
     buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: source /opt/render/project/.env && uvicorn app:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: ZHIHU_COOKIE
         sync: false
       - key: CHROMIUM_PATH
-        sync: false
-        # 这个值会在构建时被build.sh更新
-        value: "/opt/render/.local-chromium/chrome-linux/chrome"
+        value: "/opt/render/.local/share/pyppeteer/local-chromium/588429/chrome-linux/chrome"
     # 增加构建时的资源限制
     buildConfig:
       maxRetries: 3
