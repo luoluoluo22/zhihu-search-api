@@ -12,5 +12,12 @@ print(chromium_executable())
 
 echo "Chromium下载完成！路径: ${CHROMIUM_PATH}"
 
-# 将Chromium路径写入render环境变量
-echo "CHROMIUM_PATH=${CHROMIUM_PATH}" >> .env 
+# 将Chromium路径写入系统环境变量
+export CHROMIUM_PATH="${CHROMIUM_PATH}"
+
+# 创建持久化的环境变量文件
+mkdir -p /opt/render/project/
+echo "export CHROMIUM_PATH=${CHROMIUM_PATH}" > /opt/render/project/.env
+
+# 确保当前用户可以访问Chromium
+chmod -R 755 $(dirname "${CHROMIUM_PATH}") 
