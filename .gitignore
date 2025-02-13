@@ -4,3 +4,18 @@
 # Ignore Python compiled files
 __pycache__/
 *.pyc
+
+# Ignore cookies
+cookies.txt
+
+# Ignore node modules
+node_modules/
+
+# Ignore netlify
+.netlify/
+
+# Ignore dist
+dist/
+
+# Ignore user data
+user_data/

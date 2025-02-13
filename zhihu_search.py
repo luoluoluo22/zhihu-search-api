@@ -10,7 +10,7 @@ async def main():
     try:
         # 启动浏览器，添加更多配置
         browser = await launch(
-            executablePath="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+            # executablePath="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
             headless=True,
             args=[
                 '--no-sandbox',
