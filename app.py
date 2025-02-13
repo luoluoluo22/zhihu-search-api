@@ -7,7 +7,7 @@ from pyppeteer import launch
 from dotenv import load_dotenv
 import sys
 import platform
-import subprocess
+import glob
 
 # 加载环境变量
 load_dotenv()
@@ -60,25 +60,54 @@ async def search_zhihu(query: str):
         print(f"当前工作目录: {os.getcwd()}")
         print(f"环境变量中的Chromium路径: {chromium_path}")
         
-        # 列出目录内容
-        try:
-            result = subprocess.run(['ls', '-la', '/opt/render/.local/share/pyppeteer/local-chromium/588429/chrome-linux/'], 
-                                  capture_output=True, text=True)
-            print("目录内容:")
-            print(result.stdout)
-        except Exception as e:
-            print(f"列出目录失败: {e}")
+        # 检查目录结构
+        base_dir = "/opt/render/.local/share/pyppeteer/local-chromium/588429"
+        print(f"\n检查基础目录是否存在: {os.path.exists(base_dir)}")
+        
+        if os.path.exists(base_dir):
+            print("\n基础目录内容:")
+            try:
+                for item in os.listdir(base_dir):
+                    item_path = os.path.join(base_dir, item)
+                    print(f"- {item} ({'目录' if os.path.isdir(item_path) else '文件'})")
+            except Exception as e:
+                print(f"列出目录内容失败: {e}")
 
-        if not os.path.exists(chromium_path):
-            # 尝试修正路径
-            alt_path = "/opt/render/.local/share/pyppeteer/local-chromium/588429/chrome-linux/chrome"
-            if os.path.exists(alt_path):
-                print(f"使用替代路径: {alt_path}")
-                chromium_path = alt_path
+            chrome_linux_dir = os.path.join(base_dir, "chrome-linux")
+            if os.path.exists(chrome_linux_dir):
+                print("\nchrome-linux目录内容:")
+                try:
+                    for item in os.listdir(chrome_linux_dir):
+                        item_path = os.path.join(chrome_linux_dir, item)
+                        print(f"- {item} ({'目录' if os.path.isdir(item_path) else '文件'})")
+                        if item == "chrome":
+                            print(f"chrome文件权限: {oct(os.stat(item_path).st_mode)[-3:]}")
+                except Exception as e:
+                    print(f"列出chrome-linux目录内容失败: {e}")
+
+        # 检查文件权限
+        if os.path.exists(chromium_path):
+            print(f"\nChromium文件权限: {oct(os.stat(chromium_path).st_mode)[-3:]}")
+            # 尝试修复权限
+            try:
+                os.chmod(chromium_path, 0o755)
+                print("已设置执行权限")
+            except Exception as e:
+                print(f"设置权限失败: {e}")
+        else:
+            print(f"\nChromium文件不存在: {chromium_path}")
+            # 搜索可能的位置
+            possible_locations = glob.glob("/opt/render/.local/share/pyppeteer/local-chromium/**/chrome", recursive=True)
+            if possible_locations:
+                print("\n找到以下可能的Chrome位置:")
+                for loc in possible_locations:
+                    print(f"- {loc}")
+                chromium_path = possible_locations[0]
+                print(f"\n使用第一个找到的位置: {chromium_path}")
             else:
-                raise Exception(f"Chromium可执行文件不存在: {chromium_path}，替代路径也不存在: {alt_path}")
+                raise Exception("未找到任何Chrome可执行文件")
 
-        print(f"最终使用的Chromium路径: {chromium_path}")
+        print(f"\n最终使用的Chromium路径: {chromium_path}")
         launch_options['executablePath'] = chromium_path
 
         # 启动浏览器
