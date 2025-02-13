@@ -7,6 +7,7 @@ from pyppeteer import launch
 from dotenv import load_dotenv
 import sys
 import platform
+import subprocess
 
 # 加载环境变量
 load_dotenv()
@@ -56,10 +57,28 @@ async def search_zhihu(query: str):
         if not chromium_path:
             raise Exception("未找到Chromium路径环境变量")
         
-        if not os.path.exists(chromium_path):
-            raise Exception(f"Chromium可执行文件不存在: {chromium_path}")
+        print(f"当前工作目录: {os.getcwd()}")
+        print(f"环境变量中的Chromium路径: {chromium_path}")
+        
+        # 列出目录内容
+        try:
+            result = subprocess.run(['ls', '-la', '/opt/render/.local/share/pyppeteer/local-chromium/588429/chrome-linux/'], 
+                                  capture_output=True, text=True)
+            print("目录内容:")
+            print(result.stdout)
+        except Exception as e:
+            print(f"列出目录失败: {e}")
 
-        print(f"使用Chromium路径: {chromium_path}")
+        if not os.path.exists(chromium_path):
+            # 尝试修正路径
+            alt_path = "/opt/render/.local/share/pyppeteer/local-chromium/588429/chrome-linux/chrome"
+            if os.path.exists(alt_path):
+                print(f"使用替代路径: {alt_path}")
+                chromium_path = alt_path
+            else:
+                raise Exception(f"Chromium可执行文件不存在: {chromium_path}，替代路径也不存在: {alt_path}")
+
+        print(f"最终使用的Chromium路径: {chromium_path}")
         launch_options['executablePath'] = chromium_path
 
         # 启动浏览器
