@@ -49,4 +49,8 @@ else
     echo "Chrome文件不存在: $CHROME_PATH"
     # 列出目录内容以供调试
     echo "目录内容:"
-    ls -la /opt/render/.local/share/pyppeteer/local-chromium/ 
+    ls -la /opt/render/.local/share/pyppeteer/local-chromium/
+fi
+
+# 输出最终状态
+echo "构建脚本完成" 
