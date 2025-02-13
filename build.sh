@@ -45,12 +45,25 @@ if [ -f "$CHROME_PATH" ]; then
     ls -l "$CHROME_PATH"
     # 确保有执行权限
     chmod 755 "$CHROME_PATH"
+    
+    # 将Chrome路径写入环境变量文件
+    echo "CHROMIUM_PATH=$CHROME_PATH" > /opt/render/project/.env
+    echo "已将Chrome路径写入环境变量文件"
+    
+    # 确保当前会话也能使用
+    export CHROMIUM_PATH="$CHROME_PATH"
 else
     echo "Chrome文件不存在: $CHROME_PATH"
     # 列出目录内容以供调试
     echo "目录内容:"
     ls -la /opt/render/.local/share/pyppeteer/local-chromium/
+    exit 1
 fi
+
+# 验证环境变量
+echo "当前CHROMIUM_PATH环境变量: $CHROMIUM_PATH"
+echo "环境变量文件内容:"
+cat /opt/render/project/.env
 
 # 输出最终状态
 echo "构建脚本完成" 
